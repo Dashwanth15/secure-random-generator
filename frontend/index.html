@@ -1,0 +1,1096 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Secure Random Number Generator — Cryptography Learning Lab</title>
+  <meta name="description"
+        content="Interactive educational cryptography laboratory comparing PRNG and CSPRNG for cryptographic keys, nonces, session identifiers, and security tokens." />
+  
+  <!-- Google Fonts: Inter and JetBrains Mono -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
+  
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+<!-- Server Status Banner -->
+<div id="server-banner" class="server-banner" role="status" aria-live="polite"></div>
+
+<!-- =========================================================================
+     STICKY NAVIGATION BAR
+     ========================================================================= -->
+<header class="site-header" role="banner">
+  <div class="container header-container">
+    <div class="header-inner">
+      <a href="#hero" class="header-logo" aria-label="Home">
+        <div class="header-icon" aria-hidden="true">🔐</div>
+        <div class="header-brand">
+          <h1>Secure Random Generator</h1>
+          <span class="header-sub">Cryptography Learning Lab</span>
+        </div>
+      </a>
+      <span class="badge badge-blue header-badge">Academic Assignment</span>
+    </div>
+
+    <!-- Navigation Links -->
+    <nav class="header-nav" aria-label="Page sections">
+      <a href="#why" class="nav-link">Why Randomness</a>
+      <a href="#lab" class="nav-link active">Interactive Lab</a>
+      <a href="#compare" class="nav-link">PRNG vs CSPRNG</a>
+      <a href="#predict" class="nav-link">Predict It</a>
+      <a href="#usecases" class="nav-link">Use Cases</a>
+      <a href="#howworks" class="nav-link">How It Works</a>
+      <a href="#takeaways" class="nav-link">Key Takeaways</a>
+    </nav>
+  </div>
+</header>
+
+<main>
+  <!-- =========================================================================
+       HERO SECTION
+       ========================================================================= -->
+  <section id="hero" class="hero" aria-label="Hero Introduction">
+    <div class="container hero-container">
+      <div class="hero-content">
+        <span class="section-label hero-label">Cryptography Assignment Project</span>
+        <h2 class="hero-title">
+          Secure Random Number Generator
+        </h2>
+        <p class="hero-lead">
+          Generate · Use · Verify · Understand
+        </p>
+        <p class="hero-sub">
+          Explore why ordinary Pseudo-Random Number Generators (PRNGs) fail for security and why
+          <strong>Cryptographically Secure PRNGs (CSPRNGs)</strong> are essential for keys, nonces, session identifiers, and security tokens.
+        </p>
+
+        <div class="hero-badges">
+          <span class="badge badge-blue">Python Flask Backend</span>
+          <span class="badge badge-green">CSPRNG: secrets module</span>
+          <span class="badge badge-amber">PRNG: random module (demo only)</span>
+          <span class="badge badge-blue">Interactive Verification</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <div class="section-divider"></div>
+
+  <!-- =========================================================================
+       SECTION 1 — WHY RANDOMNESS MATTERS
+       ========================================================================= -->
+  <section id="why" class="section" aria-labelledby="why-title">
+    <div class="container">
+      <div class="section-header">
+        <span class="step-tag">FOUNDATION</span>
+        <h2 class="section-title" id="why-title">Why Randomness Matters in Cryptography</h2>
+        <p class="section-subtitle">
+          All modern cryptographic guarantees rely on secrets that an adversary cannot guess or compute.
+        </p>
+      </div>
+
+      <div class="why-grid">
+        <!-- Security Chain -->
+        <div class="flow-chain" role="list" aria-label="Security Chain">
+          <div class="flow-step-card" role="listitem">
+            <div class="flow-icon">🎲</div>
+            <div class="flow-info">
+              <h4>Randomness</h4>
+              <p>Values generated from unpredictable physical or operating system entropy.</p>
+            </div>
+          </div>
+
+          <div class="flow-arrow-down" aria-hidden="true">↓</div>
+
+          <div class="flow-step-card" role="listitem">
+            <div class="flow-icon">❓</div>
+            <div class="flow-info">
+              <h4>Unpredictability</h4>
+              <p>An attacker who knows previous outputs cannot compute or predict future values.</p>
+            </div>
+          </div>
+
+          <div class="flow-arrow-down" aria-hidden="true">↓</div>
+
+          <div class="flow-step-card flow-step-secure" role="listitem">
+            <div class="flow-icon">🔒</div>
+            <div class="flow-info">
+              <h4>Cryptographic Security</h4>
+              <p>Keys, nonces, and session tokens remain confidential and tamper-proof.</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Academic Context Box -->
+        <div class="explanation-card">
+          <h3 class="card-heading">The Core Cryptographic Distinction</h3>
+          <p>
+            <strong>Ordinary PRNGs</strong> (such as Python's <code>random</code> module using the Mersenne Twister) are designed for statistical uniform distribution and computational speed. They are deterministic mathematical algorithms. If an attacker discovers the internal state or seed, all past and future numbers are exposed.
+          </p>
+          <p>
+            <strong>CSPRNGs</strong> (such as Python's <code>secrets</code> module backed by <code>os.urandom</code>) harvest hardware entropy from the OS kernel (timing jitter, interrupt timings, device events). They are mathematically engineered to satisfy the <em>next-bit unpredictability property</em>.
+          </p>
+          <div class="callout callout-amber">
+            <strong>⚠ Core Security Principle:</strong>
+            If an attacker can predict a cryptographic key, nonce, or session identifier, encryption and authentication can be bypassed completely.
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <div class="section-divider"></div>
+
+  <!-- =========================================================================
+       SECTION 2 — THE INTERACTIVE CRYPTOGRAPHY WORKBENCH (SIDE-BY-SIDE)
+       ========================================================================= -->
+  <section id="lab" class="section lab-section" aria-labelledby="lab-title">
+    <div class="container">
+      <div class="section-header">
+        <span class="step-tag">INTERACTIVE LABORATORY</span>
+        <h2 class="section-title" id="lab-title">Interactive Cryptography Workbench</h2>
+        <p class="section-subtitle">
+          Configure &amp; generate secure values on the left, then immediately use and verify them in real application scenarios on the right.
+        </p>
+      </div>
+
+      <!-- Guided 3-Stage Progress Guide -->
+      <div class="guide-steps-bar" role="navigation" aria-label="Guided Workflow Steps">
+        <div class="guide-step active" id="gstep-1">
+          <span class="gstep-badge">1</span>
+          <div class="gstep-text">
+            <strong>Select Primitive &amp; Size</strong>
+            <span>Choose Key, Nonce, Session, or Token</span>
+          </div>
+        </div>
+        <div class="guide-arrow">➔</div>
+        <div class="guide-step" id="gstep-2">
+          <span class="gstep-badge">2</span>
+          <div class="gstep-text">
+            <strong>Generate CSPRNG Value</strong>
+            <span>Draws real OS kernel entropy</span>
+          </div>
+        </div>
+        <div class="guide-arrow">➔</div>
+        <div class="guide-step" id="gstep-3">
+          <span class="gstep-badge">3</span>
+          <div class="gstep-text">
+            <strong>Live Application Verification</strong>
+            <span>Encrypt, test replay, auth session, or check token</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Main Workbench Layout: 2 Columns Side-by-Side -->
+      <div class="workbench-grid">
+        
+        <!-- ==============================================================
+             LEFT COLUMN: GENERATOR STUDIO
+             ============================================================== -->
+        <div class="workbench-col col-generator">
+          <div class="workbench-card">
+            <div class="wb-card-header">
+              <div class="wb-header-title">
+                <span class="wb-badge-num">STUDIO</span>
+                <h3>Generator Controls</h3>
+              </div>
+              <span class="badge badge-green" id="csprng-status-badge">● CSPRNG Ready</span>
+            </div>
+
+            <div class="wb-card-body">
+              <!-- Primitive Selection Tabs -->
+              <label class="field-label">Select Cryptographic Primitive:</label>
+              <div class="primitive-tabs" role="radiogroup" aria-label="Select Primitive">
+                <button class="prim-tab active" data-type="key" type="button" role="radio" aria-checked="true">
+                  <span class="prim-icon">🔑</span>
+                  <span class="prim-title">Key</span>
+                </button>
+                <button class="prim-tab" data-type="nonce" type="button" role="radio" aria-checked="false">
+                  <span class="prim-icon">🔄</span>
+                  <span class="prim-title">Nonce</span>
+                </button>
+                <button class="prim-tab" data-type="session" type="button" role="radio" aria-checked="false">
+                  <span class="prim-icon">👤</span>
+                  <span class="prim-title">Session ID</span>
+                </button>
+                <button class="prim-tab" data-type="token" type="button" role="radio" aria-checked="false">
+                  <span class="prim-icon">🛡️</span>
+                  <span class="prim-title">Token</span>
+                </button>
+              </div>
+
+              <!-- Primitive Purpose Banner -->
+              <div class="primitive-info-card" id="primitive-info-box">
+                <div class="prim-info-header">
+                  <span id="prim-info-icon" class="prim-large-icon">🔑</span>
+                  <div>
+                    <h4 id="prim-info-heading">Cryptographic Key</h4>
+                    <p id="prim-info-purpose">Protects information through authenticated encryption.</p>
+                  </div>
+                </div>
+                <p id="prim-info-desc" class="prim-info-desc">
+                  Cryptographic keys must be unpredictable. This project uses Python's <code>secrets</code> module to generate secure random key material.
+                </p>
+              </div>
+
+              <!-- Configuration: Byte Length & Live Calculation -->
+              <div class="config-group">
+                <div class="config-row">
+                  <div style="flex:1;">
+                    <label for="byte-length-select" class="field-label">Byte Length:</label>
+                    <select id="byte-length-select" class="custom-select" aria-label="Select byte length">
+                      <!-- Populated dynamically via JavaScript -->
+                    </select>
+                  </div>
+                </div>
+
+                <!-- Live Formula Display -->
+                <div class="live-calc-box">
+                  <div class="calc-col">
+                    <span class="calc-val" id="calc-bytes">32</span>
+                    <span class="calc-lbl">Bytes</span>
+                  </div>
+                  <div class="calc-divider">=</div>
+                  <div class="calc-col">
+                    <span class="calc-val" id="calc-bits">256</span>
+                    <span class="calc-lbl">Bits</span>
+                  </div>
+                  <div class="calc-divider">=</div>
+                  <div class="calc-col">
+                    <span class="calc-val" id="calc-hex">64</span>
+                    <span class="calc-lbl">Hex Chars</span>
+                  </div>
+                </div>
+                <div class="recommendation-text" id="config-recommendation">
+                  Recommended: 32 bytes / 256 bits for AES-256 symmetric encryption
+                </div>
+              </div>
+
+              <!-- Primary Generate Button -->
+              <div class="generate-btn-wrapper">
+                <button id="btn-generate-value" class="btn btn-primary btn-block btn-lg" type="button">
+                  <span class="btn-spinner" aria-hidden="true"></span>
+                  <span class="btn-text">🔐 Generate Secure Value</span>
+                </button>
+              </div>
+
+              <!-- Result Box (Appears after generation) -->
+              <div id="generated-result-box" class="result-box-compact" style="display:none;">
+                <div class="res-compact-header">
+                  <span class="badge badge-green">✓ Secure Value Generated</span>
+                  <span class="res-bits-tag" id="res-badge-bits">256 BITS</span>
+                </div>
+
+                <div class="res-value-row">
+                  <div class="res-value-mono" id="generated-value-display">—</div>
+                  <button id="btn-copy-val" class="btn-copy" type="button" title="Copy to clipboard">
+                    ⎘ Copy
+                  </button>
+                </div>
+
+                <div class="res-meta-line">
+                  <span id="stat-bytes">32</span>B · <span id="stat-bits">256</span> bits · <span id="stat-hex">64</span> hex chars · <strong style="color:var(--green);">CSPRNG</strong>
+                </div>
+
+                <!-- Guidance pointing to right column -->
+                <div class="next-step-prompt" id="next-step-prompt">
+                  <span class="prompt-icon">👉</span>
+                  <span><strong>Next Step:</strong> Your value is loaded into the testing panel on the right. Test and verify it below!</span>
+                </div>
+              </div>
+
+            </div>
+          </div>
+        </div>
+
+        <!-- ==============================================================
+             RIGHT COLUMN: LIVE APPLICATION SANDBOX & VERIFICATION
+             ============================================================== -->
+        <div class="workbench-col col-sandbox">
+          <div class="workbench-card">
+            <div class="wb-card-header">
+              <div class="wb-header-title">
+                <span class="wb-badge-num">SANDBOX</span>
+                <h3 id="sandbox-header-title">Live Application &amp; Verification</h3>
+              </div>
+              <span class="badge badge-blue" id="sandbox-mode-badge">Key Lifecycle</span>
+            </div>
+
+            <div class="wb-card-body">
+
+              <!-- ========================================================
+                   DEMO 1: 🔑 CRYPTOGRAPHIC KEY LIFECYCLE
+                   ======================================================== -->
+              <div id="demo-key-container" class="sandbox-demo-view">
+                <div class="sandbox-instructions">
+                  <strong>How to use this test:</strong> Encrypt your secret message using the generated key, then manually supply the key to test authenticated decryption.
+                </div>
+
+                <!-- Step 1: Plaintext Message Input -->
+                <div class="sandbox-section">
+                  <label for="key-demo-message" class="field-label">1. Plaintext Secret Message:</label>
+                  <textarea id="key-demo-message" class="custom-textarea" rows="2" placeholder="Hello, this is my secret cryptographic message." maxlength="2000">Hello, this is my secret cryptographic message.</textarea>
+                  
+                  <button id="btn-key-encrypt" class="btn btn-primary" type="button">
+                    🔒 Encrypt Message with Generated Key
+                  </button>
+                </div>
+
+                <!-- Step 2: Ciphertext Output (Shown after encryption) -->
+                <div id="key-cipher-panel" class="sandbox-section" style="display:none;">
+                  <label class="field-label">2. Encrypted Ciphertext (AES-128-CBC + HMAC-SHA256):</label>
+                  <div class="cipher-box-val" id="key-ciphertext-val">—</div>
+
+                  <!-- Visual Connection: Generated Key -> Decryption Key -->
+                  <div class="key-relation-banner">
+                    <div class="k-rel-top">
+                      <span class="k-rel-tag">🔐 Active Encryption Key:</span>
+                      <code class="k-rel-key" id="key-active-ref-val">—</code>
+                    </div>
+                    <div class="k-rel-arrow">
+                      <span class="k-rel-line"></span>
+                      <span class="k-rel-badge">↓ SAME KEY USED TO DECRYPT ↓</span>
+                      <span class="k-rel-line"></span>
+                    </div>
+                  </div>
+
+                  <!-- Step 3: Decryption & Key Supply -->
+                  <div style="margin-top:12px;">
+                    <label for="key-attempt-input" class="field-label">3. Supply Decryption Key to Unlock:</label>
+                    <div class="input-with-button">
+                      <input type="text" id="key-attempt-input" class="custom-input" placeholder="Paste or supply cryptographic key..." autocomplete="off" />
+                      <button id="btn-paste-key-input" class="btn btn-secondary" type="button">📋 Paste</button>
+                    </div>
+
+                    <!-- Test Shortcut Chips -->
+                    <div class="test-chips-row">
+                      <span class="chips-label">Quick Test:</span>
+                      <button id="btn-chip-correct-key" class="chip-btn chip-green" type="button">✓ Use Generated Key</button>
+                      <button id="btn-chip-wrong-key" class="chip-btn chip-amber" type="button">❌ Test Wrong Key</button>
+                      <button id="btn-chip-corrupt-key" class="chip-btn chip-red" type="button">⚠ Test Corrupt Ciphertext</button>
+                    </div>
+
+                    <div style="margin-top:14px;">
+                      <button id="btn-key-verify" class="btn btn-green btn-block" type="button">
+                        🔓 Verify Key &amp; Decrypt Plaintext
+                      </button>
+                    </div>
+
+                    <!-- Verification Outcome Alerts -->
+                    <div id="key-verify-success" class="verify-alert verify-alert-success" style="display:none;" role="region" aria-live="polite">
+                      <div class="verify-alert-header">
+                        <span class="verify-icon">✓</span>
+                        <strong>KEY VERIFIED — Decryption Successful</strong>
+                      </div>
+                      <p class="verify-alert-body">
+                        HMAC-SHA256 authenticated tag matched. Original message recovered:
+                      </p>
+                      <div class="recovered-message-box" id="key-recovered-text">—</div>
+                    </div>
+
+                    <div id="key-verify-failure" class="verify-alert verify-alert-danger" style="display:none;" role="region" aria-live="polite">
+                      <div class="verify-alert-header">
+                        <span class="verify-icon">✕</span>
+                        <strong>KEY REJECTED — Authentication Failed</strong>
+                      </div>
+                      <p class="verify-alert-body" id="key-failure-explanation">
+                        HMAC authentication failed. Decryption safely aborted to protect confidentiality.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- ========================================================
+                   DEMO 2: 🔄 NONCE FRESHNESS & ANTI-REPLAY DEMO
+                   ======================================================== -->
+              <div id="demo-nonce-container" class="sandbox-demo-view" style="display:none;">
+                <div class="sandbox-instructions">
+                  <strong>How to use this test:</strong> Send the banking transaction once with your fresh nonce (accepted), then send the exact same request again to observe replay attack detection!
+                </div>
+
+                <div class="sandbox-section">
+                  <div class="sim-packet-box">
+                    <div class="sim-packet-header">
+                      <span class="badge badge-blue">POST /api/transfer</span>
+                      <span class="sim-host">banking.example.com</span>
+                    </div>
+                    <div class="sim-packet-body">
+                      <div class="sim-row">
+                        <span class="sim-label">Action:</span>
+                        <span class="sim-val">Transfer ₹100 to Bob</span>
+                      </div>
+                      <div class="sim-row">
+                        <span class="sim-label">Attached Nonce:</span>
+                        <span class="sim-val"><code id="nonce-attached-val">—</code></span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div class="sandbox-btn-group">
+                    <button id="btn-nonce-send-fresh" class="btn btn-primary" type="button">
+                      📤 Send 1st Request (Fresh Nonce)
+                    </button>
+                    <button id="btn-nonce-send-replay" class="btn btn-amber" type="button">
+                      ⚠ Send Same Request Again (Simulate Replay)
+                    </button>
+                    <button id="btn-nonce-reset" class="btn btn-secondary" type="button">
+                      ↺ Reset Server Cache
+                    </button>
+                  </div>
+
+                  <!-- Nonce Response Feedback Box -->
+                  <div id="nonce-result-box" class="verify-alert" style="display:none;" role="region" aria-live="polite">
+                    <div class="verify-alert-header">
+                      <span class="verify-icon" id="nonce-res-icon">✓</span>
+                      <strong id="nonce-res-title">Server Decision</strong>
+                    </div>
+                    <p class="verify-alert-body" id="nonce-res-message">—</p>
+                    <div class="verify-status-row">
+                      <span>Status: <strong id="nonce-res-http">200 OK</strong></span>
+                      <span>Verification: <strong id="nonce-res-fresh">FRESH</strong></span>
+                    </div>
+                  </div>
+
+                  <div class="callout callout-blue" style="margin-top:16px;">
+                    <strong>💡 Nonce Principle:</strong> Nonces guarantee that repeated transmissions cannot be replayed by an adversary who intercepts the network traffic.
+                  </div>
+                </div>
+              </div>
+
+              <!-- ========================================================
+                   DEMO 3: 👤 SESSION IDENTIFIER AUTHENTICATION DEMO
+                   ======================================================== -->
+              <div id="demo-session-container" class="sandbox-demo-view" style="display:none;">
+                <div class="sandbox-instructions">
+                  <strong>How to use this test:</strong> Authenticate a user request using the generated CSPRNG session ID, then attempt access with an invalid/guessed session ID to simulate session hijacking.
+                </div>
+
+                <div class="sandbox-section">
+                  <div class="sim-packet-box">
+                    <div class="sim-packet-header">
+                      <span class="badge badge-blue">GET /profile</span>
+                      <span class="sim-host">university-portal.edu</span>
+                    </div>
+                    <div class="sim-packet-body">
+                      <div class="sim-row">
+                        <span class="sim-label">Active Session:</span>
+                        <span class="sim-val"><code id="session-active-val">—</code></span>
+                      </div>
+                      <div class="sim-row">
+                        <span class="sim-label">User:</span>
+                        <span class="sim-val">student_user (Authenticated)</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div class="sandbox-btn-group">
+                    <button id="btn-session-send-valid" class="btn btn-green" type="button">
+                      👤 Simulate Valid Request (GET /profile)
+                    </button>
+                    <button id="btn-session-send-invalid" class="btn btn-red" type="button">
+                      ❌ Try Guessed / Invalid Session ID
+                    </button>
+                  </div>
+
+                  <!-- Session Feedback Box -->
+                  <div id="session-result-box" class="verify-alert" style="display:none;" role="region" aria-live="polite">
+                    <div class="verify-alert-header">
+                      <span class="verify-icon" id="session-res-icon">✓</span>
+                      <strong id="session-res-title">Session Validation</strong>
+                    </div>
+                    <p class="verify-alert-body" id="session-res-message">—</p>
+                    <div class="verify-status-row">
+                      <span>HTTP Status: <strong id="session-res-http">200 OK</strong></span>
+                      <span>Access Decision: <strong id="session-res-access">GRANTED</strong></span>
+                    </div>
+                  </div>
+
+                  <div class="callout callout-blue" style="margin-top:16px;">
+                    <strong>💡 Session Security Principle:</strong> 256-bit CSPRNG session IDs make brute-force session hijacking mathematically impossible ($1 \text{ in } 2^{256}$).
+                  </div>
+                </div>
+              </div>
+
+              <!-- ========================================================
+                   DEMO 4: 🛡️ SECURITY TOKEN CONSTANT-TIME VERIFICATION
+                   ======================================================== -->
+              <div id="demo-token-container" class="sandbox-demo-view" style="display:none;">
+                <div class="sandbox-instructions">
+                  <strong>How to use this test:</strong> Compare the client token with the server's expected token using constant-time evaluation (<code>secrets.compare_digest</code>). Corrupt a character to test mismatch detection!
+                </div>
+
+                <div class="sandbox-section">
+                  <div class="token-fields-grid">
+                    <div>
+                      <label class="field-label">Expected Server Token (CSPRNG):</label>
+                      <div class="token-val-display" id="token-expected-val">—</div>
+                    </div>
+
+                    <div style="margin-top:10px;">
+                      <label for="token-input-field" class="field-label">Client Supplied Token (Editable):</label>
+                      <input type="text" id="token-input-field" class="custom-input" placeholder="Enter token to verify..." autocomplete="off" />
+                    </div>
+                  </div>
+
+                  <div class="test-chips-row" style="margin-top:10px;">
+                    <span class="chips-label">Mutate Token:</span>
+                    <button id="btn-token-reset-valid" class="chip-btn chip-green" type="button">✓ Reset to Matching</button>
+                    <button id="btn-token-corrupt-char" class="chip-btn chip-amber" type="button">✏ Corrupt 1 Character</button>
+                  </div>
+
+                  <div style="margin-top:14px;">
+                    <button id="btn-token-verify" class="btn btn-primary btn-block" type="button">
+                      🛡️ Verify Token (Constant-Time)
+                    </button>
+                  </div>
+
+                  <!-- Token Feedback Box -->
+                  <div id="token-result-box" class="verify-alert" style="display:none;" role="region" aria-live="polite">
+                    <div class="verify-alert-header">
+                      <span class="verify-icon" id="token-res-icon">✓</span>
+                      <strong id="token-res-title">Token Verification</strong>
+                    </div>
+                    <p class="verify-alert-body" id="token-res-message">—</p>
+                    <div class="verify-status-row">
+                      <span>Decision: <strong id="token-res-decision">AUTHORIZED</strong></span>
+                      <span>Timing Attack Protection: <strong>Active ✓</strong></span>
+                    </div>
+                  </div>
+
+                  <div class="callout callout-blue" style="margin-top:16px;">
+                    <strong>💡 Timing Attack Defense:</strong> Standard <code>==</code> comparison returns early on the first wrong character. <code>compare_digest()</code> always takes equal time.
+                  </div>
+                </div>
+              </div>
+
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <div class="section-divider"></div>
+
+  <!-- =========================================================================
+       SECTION 3 — PRNG vs CSPRNG COMPARISON
+       ========================================================================= -->
+  <section id="compare" class="section" aria-labelledby="compare-title">
+    <div class="container">
+      <div class="section-header">
+        <span class="step-tag">SIDE-BY-SIDE ANALYSIS</span>
+        <h2 class="section-title" id="compare-title">PRNG vs CSPRNG Comparison</h2>
+        <p class="section-subtitle">
+          Both produce number sequences. The critical cryptographic distinction is <em>unpredictability and reproducibility</em>.
+        </p>
+      </div>
+
+      <div class="compare-grid">
+        <!-- PRNG Card -->
+        <div class="card compare-card-prng" role="region" aria-label="PRNG demonstration">
+          <div class="card-header">
+            <span class="card-title">⚠ Ordinary PRNG</span>
+            <span class="badge badge-amber">Predictable ❌</span>
+          </div>
+          <div class="card-body">
+            <div class="module-meta">
+              <span class="badge badge-amber">Python random module</span>
+              <span class="meta-note">Fixed Seed = 42</span>
+            </div>
+
+            <div class="seq-block">
+              <span class="seq-label">Run 1 (seed = 42)</span>
+              <div id="prng-run1" class="seq-values" aria-live="polite">
+                <span class="seq-num prng">—</span>
+              </div>
+            </div>
+
+            <div class="seq-block">
+              <span class="seq-label">Run 2 (seed = 42 — same seed)</span>
+              <div id="prng-run2" class="seq-values" aria-live="polite">
+                <span class="seq-num prng">—</span>
+              </div>
+            </div>
+
+            <div id="prng-same-badge" class="same-badge bad" aria-live="polite">
+              Loading…
+            </div>
+
+            <p class="compare-caption">
+              An ordinary PRNG is deterministic. Given the same initial seed, it always produces the identical sequence. If an attacker recovers the seed or internal state, all future values are completely predictable.
+            </p>
+          </div>
+        </div>
+
+        <!-- CSPRNG Card -->
+        <div class="card compare-card-csprng" role="region" aria-label="CSPRNG demonstration">
+          <div class="card-header">
+            <span class="card-title">✓ CSPRNG</span>
+            <span class="badge badge-green">Unpredictable ✓</span>
+          </div>
+          <div class="card-body">
+            <div class="module-meta">
+              <span class="badge badge-green">Python secrets module</span>
+              <span class="meta-note">OS Kernel Entropy Pool</span>
+            </div>
+
+            <div class="seq-block">
+              <span class="seq-label">Generation 1 (OS entropy)</span>
+              <div class="seq-values">
+                <span id="csprng-run1" class="seq-hex csprng" aria-live="polite">Loading…</span>
+              </div>
+            </div>
+
+            <div class="seq-block">
+              <span class="seq-label">Generation 2 (Independent)</span>
+              <div class="seq-values">
+                <span id="csprng-run2" class="seq-hex csprng" aria-live="polite">Loading…</span>
+              </div>
+            </div>
+
+            <div id="csprng-diff-badge" class="same-badge good" aria-live="polite">
+              Loading…
+            </div>
+
+            <p class="compare-caption">
+              A CSPRNG produces numbers that are computationally infeasible to predict. Each generation is independent, continuously mixed with hardware entropy, and does not depend on a user-supplied seed.
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <div class="action-center">
+        <button id="refresh-compare-btn" class="btn btn-secondary" type="button" aria-label="Refresh comparison">
+          ↺ Regenerate Comparison Data
+        </button>
+      </div>
+
+      <!-- Feature Comparison Table -->
+      <div class="card table-card" style="margin-top:36px;">
+        <div class="card-header">
+          <h3 class="card-title">Technical Security Comparison</h3>
+        </div>
+        <div class="card-body" style="padding:0; overflow-x:auto;">
+          <table class="comparison-table" aria-label="PRNG vs CSPRNG technical comparison">
+            <thead>
+              <tr>
+                <th>Evaluation Property</th>
+                <th>Ordinary PRNG (<code>random</code>)</th>
+                <th>CSPRNG (<code>secrets</code>)</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>Generation Speed</td>
+                <td class="tick-green">Very Fast ✓</td>
+                <td class="tick-green">Fast ✓</td>
+              </tr>
+              <tr>
+                <td>Suitable for Games &amp; Simulations</td>
+                <td class="tick-green">✓ Yes</td>
+                <td class="tick-green">✓ Yes</td>
+              </tr>
+              <tr>
+                <td>Predictable with Known Seed/State</td>
+                <td class="tick-amber">Yes ⚠ (Reproducible)</td>
+                <td class="tick-green">Resistant to State Reconstruction</td>
+              </tr>
+              <tr>
+                <td>Suitable for Cryptographic Keys</td>
+                <td class="tick-red">❌ Insecure</td>
+                <td class="tick-green">✓ Cryptographically Secure</td>
+              </tr>
+              <tr>
+                <td>Suitable for Nonces &amp; IVs</td>
+                <td class="tick-red">❌ Insecure</td>
+                <td class="tick-green">✓ Cryptographically Secure</td>
+              </tr>
+              <tr>
+                <td>Suitable for Session Identifiers</td>
+                <td class="tick-red">❌ Insecure</td>
+                <td class="tick-green">✓ Cryptographically Secure</td>
+              </tr>
+              <tr>
+                <td>Suitable for Security / CSRF Tokens</td>
+                <td class="tick-red">❌ Insecure</td>
+                <td class="tick-green">✓ Cryptographically Secure</td>
+              </tr>
+              <tr>
+                <td>Entropy Source</td>
+                <td class="tick-text">Math algorithm (Mersenne Twister)</td>
+                <td class="tick-green">OS Hardware Entropy Pool</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <div class="section-divider"></div>
+
+  <!-- =========================================================================
+       SECTION 4 — PREDICTABILITY DEMONSTRATION
+       ========================================================================= -->
+  <section id="predict" class="section" aria-labelledby="predict-title">
+    <div class="container">
+      <div class="section-header">
+        <span class="step-tag">LIVE EXPERIMENT</span>
+        <h2 class="section-title" id="predict-title">Can You Predict the Next Number?</h2>
+        <p class="section-subtitle">
+          Observe how a fixed seed PRNG is completely deterministic — and why CSPRNG defies prediction.
+        </p>
+      </div>
+
+      <div class="predict-grid">
+        <!-- Left: PRNG Predictor -->
+        <div class="card">
+          <div class="card-header">
+            <span class="card-title">⚠ PRNG Prediction Game (seed = 42)</span>
+            <span class="badge badge-amber">Deterministic</span>
+          </div>
+          <div class="card-body">
+            <p class="body-text">
+              The Flask backend seeds the PRNG with <code>random.seed(42)</code>. Click <strong>Reveal Next Number</strong> to see the next number in the predetermined sequence:
+            </p>
+
+            <div id="predict-sequence" class="predict-sequence" aria-live="polite" aria-label="PRNG sequence"></div>
+
+            <div style="margin-top:16px;">
+              <button id="reveal-btn" class="btn btn-primary" type="button" aria-label="Reveal Next Number">
+                Reveal Next Number →
+              </button>
+            </div>
+
+            <div id="reveal-message" class="reveal-message" role="alert" aria-live="assertive"></div>
+
+            <div class="callout callout-amber" style="margin-top:16px;">
+              <strong>⚠ The Flaw:</strong> If an attacker learns the seed or internal state of a PRNG, they can reconstruct every future session ID, token, or nonce produced by the system.
+            </div>
+          </div>
+        </div>
+
+        <!-- Right: CSPRNG Unpredictability -->
+        <div class="card">
+          <div class="card-header">
+            <span class="card-title">✓ CSPRNG Unpredictability</span>
+            <span class="badge badge-green">Cryptographically Secure</span>
+          </div>
+          <div class="card-body">
+            <p class="body-text">
+              The CSPRNG does not use a fixed seed. Every byte is drawn from system entropy:
+            </p>
+
+            <div class="csprng-box">
+              <span class="csprng-box-label">Observed Output:</span>
+              <div id="csprng-predict-val" class="csprng-val-display">Loading…</div>
+
+              <span class="csprng-box-label" style="margin-top:12px;">Next Output:</span>
+              <div class="csprng-mystery">? ? ? ? ? ? ? ?</div>
+              
+              <div class="csprng-badge-safe">
+                ✓ Prediction Computationally Infeasible ($2^{128}+$ search space)
+              </div>
+            </div>
+
+            <div class="callout callout-green" style="margin-top:16px;">
+              <strong>✓ CSPRNG Property:</strong> Even if an adversary inspects 1,000,000 previous outputs, computing the next bit with probability better than $\frac{1}{2}$ is impossible.
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <div class="section-divider"></div>
+
+  <!-- =========================================================================
+       SECTION 5 — USE CASES
+       ========================================================================= -->
+  <section id="usecases" class="section" aria-labelledby="usecases-title">
+    <div class="container">
+      <div class="section-header">
+        <span class="step-tag">REAL-WORLD IMPLEMENTATION</span>
+        <h2 class="section-title" id="usecases-title">Real-World Cryptographic Use Cases</h2>
+        <p class="section-subtitle">
+          Where is CSPRNG strictly required versus where ordinary PRNG is acceptable?
+        </p>
+      </div>
+
+      <div class="usecase-grid" role="list">
+        <!-- Key -->
+        <div class="usecase-card" role="listitem">
+          <div class="usecase-icon">🔑</div>
+          <h3 class="usecase-title">Cryptographic Keys</h3>
+          <p class="usecase-desc">
+            Symmetric keys (AES) and private asymmetric keys (RSA/ECC). A guessable key instantly breaks confidentiality and integrity.
+          </p>
+          <span class="badge badge-green">CSPRNG Required</span>
+        </div>
+
+        <!-- Nonce -->
+        <div class="usecase-card" role="listitem">
+          <div class="usecase-icon">🔄</div>
+          <h3 class="usecase-title">Nonces &amp; IVs</h3>
+          <p class="usecase-desc">
+            Initialization vectors for AES-CBC and nonces for AES-GCM. Guarantees that encrypting identical messages produces different ciphertext.
+          </p>
+          <span class="badge badge-green">CSPRNG Required</span>
+        </div>
+
+        <!-- Session ID -->
+        <div class="usecase-card" role="listitem">
+          <div class="usecase-icon">👤</div>
+          <h3 class="usecase-title">Session Identifiers</h3>
+          <p class="usecase-desc">
+            Tracks authenticated web users. Guessable session IDs enable session hijacking attacks without requiring credentials.
+          </p>
+          <span class="badge badge-green">CSPRNG Required</span>
+        </div>
+
+        <!-- Token -->
+        <div class="usecase-card" role="listitem">
+          <div class="usecase-icon">🛡️</div>
+          <h3 class="usecase-title">Security Tokens</h3>
+          <p class="usecase-desc">
+            CSRF protection tokens, OAuth bearer tokens, and password reset links. Must resist brute-force and timing attacks.
+          </p>
+          <span class="badge badge-green">CSPRNG Required</span>
+        </div>
+      </div>
+
+      <!-- When is PRNG acceptable -->
+      <div class="card prng-acceptable-card" style="margin-top:32px;">
+        <div class="card-body">
+          <div class="acceptable-header">
+            <span class="acceptable-icon">💡</span>
+            <h4>When is Ordinary PRNG (<code>random</code>) Acceptable?</h4>
+          </div>
+          <p class="acceptable-desc">
+            Ordinary PRNGs are faster and perfectly suited for <strong>non-security tasks</strong>:
+            Monte Carlo simulations, statistical sampling, video game logic, procedural terrain generation, shuffling cards in casual games, and non-security unit testing.
+          </p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <div class="section-divider"></div>
+
+  <!-- =========================================================================
+       SECTION 6 — HOW IT WORKS
+       ========================================================================= -->
+  <section id="howworks" class="section" aria-labelledby="how-title">
+    <div class="container">
+      <div class="section-header">
+        <span class="step-tag">ARCHITECTURE</span>
+        <h2 class="section-title" id="how-title">How This Application Works</h2>
+        <p class="section-subtitle">
+          Secure random generation happens on the Flask backend via OS kernel entropy.
+        </p>
+      </div>
+
+      <!-- Flow diagram -->
+      <div class="how-flow" role="img" aria-label="System Architecture Flow">
+        <div class="how-node">
+          <div class="how-node-icon">👤</div>
+          <div class="how-node-title">User</div>
+          <div class="how-node-sub">Selects primitive &amp; length</div>
+        </div>
+        <div class="how-arrow">▶</div>
+        <div class="how-node">
+          <div class="how-node-icon">🌐</div>
+          <div class="how-node-title">Browser</div>
+          <div class="how-node-sub">Sends JSON API request</div>
+        </div>
+        <div class="how-arrow">▶</div>
+        <div class="how-node highlight-blue">
+          <div class="how-node-icon">🐍</div>
+          <div class="how-node-title">Flask API</div>
+          <div class="how-node-sub">Validates input parameters</div>
+        </div>
+        <div class="how-arrow">▶</div>
+        <div class="how-node highlight-green">
+          <div class="how-node-icon">🔒</div>
+          <div class="how-node-title">Python secrets</div>
+          <div class="how-node-sub">Pulls OS kernel entropy</div>
+        </div>
+        <div class="how-arrow">▶</div>
+        <div class="how-node">
+          <div class="how-node-icon">📦</div>
+          <div class="how-node-title">JSON Response</div>
+          <div class="how-node-sub">Returns secure hex value</div>
+        </div>
+        <div class="how-arrow">▶</div>
+        <div class="how-node highlight-green">
+          <div class="how-node-icon">✅</div>
+          <div class="how-node-title">Display &amp; Verify</div>
+          <div class="how-node-sub">Interactive demonstration</div>
+        </div>
+      </div>
+
+      <!-- Endpoints Breakdown -->
+      <div class="endpoints-grid" style="margin-top:36px;">
+        <div class="card">
+          <div class="card-header">
+            <h4 class="card-title">Backend REST Endpoints</h4>
+            <span class="badge badge-blue">Flask Routes</span>
+          </div>
+          <div class="card-body">
+            <div class="endpoint-list">
+              <div class="endpoint-item">
+                <span class="http-tag post">POST</span>
+                <code>/api/generate-value</code>
+                <span class="ep-desc">Generates CSPRNG Key, Nonce, Session, or Token</span>
+              </div>
+              <div class="endpoint-item">
+                <span class="http-tag post">POST</span>
+                <code>/api/encrypt</code>
+                <span class="ep-desc">Fernet authenticated symmetric encryption</span>
+              </div>
+              <div class="endpoint-item">
+                <span class="http-tag post">POST</span>
+                <code>/api/verify-decrypt</code>
+                <span class="ep-desc">Decryption &amp; HMAC authentication verification</span>
+              </div>
+              <div class="endpoint-item">
+                <span class="http-tag post">POST</span>
+                <code>/api/nonce/verify</code>
+                <span class="ep-desc">Stateful nonce freshness &amp; anti-replay check</span>
+              </div>
+              <div class="endpoint-item">
+                <span class="http-tag post">POST</span>
+                <code>/api/session/validate</code>
+                <span class="ep-desc">Session ID table verification</span>
+              </div>
+              <div class="endpoint-item">
+                <span class="http-tag post">POST</span>
+                <code>/api/token/verify</code>
+                <span class="ep-desc">Constant-time token validation (compare_digest)</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-header">
+            <h4 class="card-title">Sample Backend Response</h4>
+            <span class="badge badge-green">200 OK JSON</span>
+          </div>
+          <div class="card-body">
+            <pre class="code-preview">{
+  "type": "key",
+  "type_title": "Cryptographic Key",
+  "bytes": 32,
+  "bits": 256,
+  "hex_chars": 64,
+  "value": "8f3a91c7b2d8a4e9...",
+  "generator": "CSPRNG",
+  "source": "Python secrets module / os.urandom",
+  "strength": "CRYPTOGRAPHICALLY SECURE"
+}</pre>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <div class="section-divider"></div>
+
+  <!-- =========================================================================
+       SECTION 7 — KEY TAKEAWAYS
+       ========================================================================= -->
+  <section id="takeaways" class="section" aria-labelledby="takeaways-title">
+    <div class="container">
+      <div class="section-header">
+        <span class="step-tag">SUMMARY FOR VIVA</span>
+        <h2 class="section-title" id="takeaways-title">Key Cryptographic Takeaways</h2>
+        <p class="section-subtitle">
+          Essential concepts to remember for demonstration and oral examinations.
+        </p>
+      </div>
+
+      <ul class="takeaways-list" role="list">
+        <li class="takeaway-item" role="listitem">
+          <div class="takeaway-num">01</div>
+          <div class="takeaway-text">
+            <strong>Random-looking is NOT synonymous with cryptographically secure.</strong>
+            A PRNG output may look uniformly distributed, but it remains deterministic and reproducible if the seed is known.
+          </div>
+        </li>
+
+        <li class="takeaway-item" role="listitem">
+          <div class="takeaway-num">02</div>
+          <div class="takeaway-text">
+            <strong>Ordinary PRNGs (Python's <code>random</code>) are vulnerable to state recovery.</strong>
+            Observing 624 outputs of the Mersenne Twister allows an attacker to clone the exact internal state and predict every future value.
+          </div>
+        </li>
+
+        <li class="takeaway-item" role="listitem">
+          <div class="takeaway-num">03</div>
+          <div class="takeaway-text">
+            <strong>CSPRNGs satisfy the Next-Bit Unpredictability property.</strong>
+            Backed by OS kernel entropy (hardware timings, interrupts), past outputs give zero computational advantage in predicting future bytes.
+          </div>
+        </li>
+
+        <li class="takeaway-item" role="listitem">
+          <div class="takeaway-num">04</div>
+          <div class="takeaway-text">
+            <strong>Security primitives depend strictly on CSPRNG.</strong>
+            Cryptographic keys (AES), nonces (GCM), session IDs, and security tokens all fail critically if an attacker can guess or predict them.
+          </div>
+        </li>
+
+        <li class="takeaway-item" role="listitem">
+          <div class="takeaway-num">05</div>
+          <div class="takeaway-text">
+            <strong>Always use standard libraries: Python's <code>secrets</code> module.</strong>
+            Never write custom random number algorithms or use <code>random</code> for passwords, tokens, keys, or nonces.
+          </div>
+        </li>
+      </ul>
+
+      <div class="card academic-note-card" style="margin-top:32px;">
+        <div class="card-body">
+          <div class="academic-note-inner">
+            <span class="academic-icon">📚</span>
+            <div>
+              <h4>Educational Demonstration Note</h4>
+              <p>
+                This project was created as an educational laboratory for College Semester 5 Cryptography. It illustrates the principles of random number generation, symmetric key encryption, anti-replay nonces, session verification, and constant-time token comparison.
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </section>
+</main>
+
+<!-- Footer -->
+<footer class="site-footer" role="contentinfo">
+  <div class="container footer-container">
+    <p>
+      <strong>Secure Random Number Generator</strong> — Cryptography Assignment Project
+    </p>
+    <p class="footer-meta">
+      Built with <strong>Python Flask</strong> · <strong>Vanilla CSS</strong> · <strong>Vanilla JavaScript</strong>
+    </p>
+    <p class="footer-badge-line">
+      CSPRNG Source: <code>Python secrets (os.urandom)</code> · Fernet Authenticated Encryption
+    </p>
+  </div>
+</footer>
+
+<script src="script.js" defer></script>
+</body>
+</html>
